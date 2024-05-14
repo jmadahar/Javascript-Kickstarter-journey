@@ -1,0 +1,260 @@
+//Lines 3-147 set up the wheel, block out the colour of previously chosen segments, and output the chosen country.
+
+var padding = {top:20, right:40, bottom:0, left:0},
+            w = 500 - padding.left - padding.right,
+            h = 500 - padding.top  - padding.bottom,
+            r = Math.min(w, h)/2,
+            rotation = 0,
+            oldrotation = 0,
+            picked = 100000,
+            oldpick = [],
+       spins = 0, // Track number of spins,
+            color = d3.scale.category20();//category20c()
+            //randomNumbers = getRandomNumbers();
+        //http://osric.com/bingo-card-generator/?title=HTML+and+CSS+BINGO!&words=padding%2Cfont-family%2Ccolor%2Cfont-weight%2Cfont-size%2Cbackground-color%2Cnesting%2Cbottom%2Csans-serif%2Cperiod%2Cpound+sign%2C%EF%B9%A4body%EF%B9%A5%2C%EF%B9%A4ul%EF%B9%A5%2C%EF%B9%A4h1%EF%B9%A5%2Cmargin%2C%3C++%3E%2C{+}%2C%EF%B9%A4p%EF%B9%A5%2C%EF%B9%A4!DOCTYPE+html%EF%B9%A5%2C%EF%B9%A4head%EF%B9%A5%2Ccolon%2C%EF%B9%A4style%EF%B9%A5%2C.html%2CHTML%2CCSS%2CJavaScript%2Cborder&freespace=true&freespaceValue=Web+Design+Master&freespaceRandom=false&width=5&height=5&number=35#results
+        const data = [
+                    {"country":"Poland",  "value":1,  "finalResult":"Poland"}, // padding
+                    {"country":"France",  "value":2,  "finalResult":"France"}, //font-family
+                    {"country":"Spain",  "value":3,  "finalResult":"Spain"}, //color
+                    {"country":"Italy",  "value":4,  "finalResult":"Italy"}, //font-weight
+                    {"country":"Germany",  "value":5,  "finalResult":"Germany"}, //font-size
+                    {"country":"Norway",  "value":6,  "finalResult":"Norway"}, //background-color
+                    {"country":"Turkey",  "value":7,  "finalResult":"Turkey"}, //nesting
+                    {"country":"Greece",  "value":8,  "finalResult":"Greece"}, //bottom
+
+        ];
+        const svg = d3.select('#chart')
+            .append("svg")
+            .data([data])
+            .attr("width",  w + padding.left + padding.right)
+            .attr("height", h + padding.top + padding.bottom);
+        const container = svg.append("g")
+            .attr("class", "chartholder")
+            .attr("transform", "translate(" + (w/2 + padding.left) + "," + (h/2 + padding.top) + ")");
+        const vis = container
+            .append("g");
+            
+        const pie = d3.layout.pie().sort(null).value(function(d){return 1;});
+        // declare an arc generator function
+        const arc = d3.svg.arc().outerRadius(r);
+        // select paths, use arc generator to draw
+        const arcs = vis.selectAll("g.slice")
+            .data(pie)
+            .enter()
+            .append("g")
+            .attr("class", "slice");
+            
+        arcs.append("path")
+            .attr("fill", function(d, i){ return color(i); })
+            .attr("d", function (d) { return arc(d); });
+        // add the text
+        arcs.append("text").attr("transform", function(d){
+                d.innerRadius = 0;
+                d.outerRadius = r;
+                d.angle = (d.startAngle + d.endAngle)/2;
+                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius -10) +")";
+            })
+            .attr("text-anchor", "end")
+            .text( function(d, i) {
+                return data[i].country;
+            });
+        container.on("click", spin);
+        function spin(d){
+            
+            container.on("click", null);
+            //all slices have been seen, all done
+             if (spins >= 2) { // Lock after two spins
+        console.log("Spin limit reached");
+        return;
+    }
+            console.log("OldPick: " + oldpick.length, "Data length: " + data.length);
+            if(oldpick.length == data.length){
+                console.log("done");
+                container.on("click", null);
+                return;
+            }
+            const  ps       = 360/data.length,
+                 pieslice = Math.round(1440/data.length),
+                 rng      = Math.floor((Math.random() * 1440) + 360);
+                
+            rotation = (Math.round(rng / ps) * ps);
+            
+            picked = Math.round(data.length - (rotation % 360)/ps);
+            picked = picked >= data.length ? (picked % data.length) : picked;
+            if(oldpick.indexOf(picked) !== -1){
+                d3.select(this).call(spin);
+                return;
+            } else {
+                oldpick.push(picked);
+            }
+            rotation += 90 - Math.round(ps/2);
+            vis.transition()
+                .duration(3000)
+                .attrTween("transform", rotTween)
+                .each("end", function(){
+                    //mark finalResult as seen
+                    d3.select(".slice:nth-child(" + (picked + 1) + ") path")
+                        .attr("fill", "#4e5c64");
+                    //populate finalResult
+                    d3.select(".finalResult h1")
+                        .text(data[picked].finalResult);
+                    oldrotation = rotation;
+             
+// Display notification
+showNotification(data[picked].country); 
+// Increment spin count
+spins++; 
+// Prompt use to choose their preferred country
+ if (spins >= 2) {
+ setTimeout(() => {
+ let userInput;
+ do {
+  userInput = prompt("Which country will you choose?");
+  if (userInput !== null) {
+    // Convert to lowercase for case insensitivity
+  userInput = userInput.toLowerCase(); 
+                        }
+     } while (userInput !== null && !isCountryOnWheel(userInput));
+                    
+    if (userInput !== null) {
+       console.log("You chose:", userInput);
+                    }
+                }, 20000);
+            }
+            
+// Add this line to display the notification
+container.on("click", spin);
+              
+  // Function checks if the user's input matches any of the countries on the wheel, regardless of case.
+function isCountryOnWheel(input) {
+    const lowerCaseCountries = data.map(country => country.country.toLowerCase());
+    return lowerCaseCountries.includes(input);
+}
+              
+                    /* Get the result value from object "data" */
+                    console.log(data[picked].value)
+              
+                    /* Comment the below line for restrict spin to sngle time */
+                    container.on("click", spin);
+                });
+        }
+        //make arrow
+        svg.append("g")
+            .attr("transform", "translate(" + (w + padding.left + padding.right) + "," + ((h/2)+padding.top) + ")")
+            .append("path")
+            .attr("d", "M-" + (r*.15) + ",0L0," + (r*.05) + "L0,-" + (r*.05) + "Z")
+            .style({"fill":"black"});
+        //draw spin circle
+        container.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 60)
+            .style({"fill":"white","cursor":"pointer"});
+        //spin text
+        container.append("text")
+            .attr("x", 0)
+            .attr("y", 15)
+            .attr("text-anchor", "middle")
+            .text("SPIN")
+            .style({"font-weight":"bold", "font-size":"30px"});
+        
+        
+        function rotTween(to) {
+          var i = d3.interpolate(oldrotation % 360, rotation);
+          return function(t) {
+            return "rotate(" + i(t) + ")";
+          };
+        }
+        
+        
+        function getRandomNumbers(){
+            var array = new Uint16Array(1000);
+            var scale = d3.scale.linear().range([360, 1440]).domain([0, 100000]);
+            if(window.hasOwnProperty("crypto") && typeof window.crypto.getRandomValues === "function"){
+                window.crypto.getRandomValues(array);
+                console.log("works");
+            } else {
+                //no support for crypto, get crappy random numbers
+                for(var i=0; i < 1000; i++){
+                    array[i] = Math.floor(Math.random() * 100000) + 1;
+                }
+            }
+            return array;
+        }
+
+//Print chosen countries
+const results = document.querySelector(".finalResult");
+const resultsRoot = document.querySelector(".output");
+
+let output ="";
+
+const handleInput = (event) => {
+	output = event.target.value
+};
+
+const addOutput = () =>{
+	const outputDiv = document.createElement("div");
+	outputDiv.innerHTML = output;
+	resultsRoot.appendChild(outputDiv);
+};
+// Need to find a way to make an event listener that does the last bit of code when ".finalOutput" appears (i.e. "Poland") next to the wheel.
+
+// Function to show notification with different descriptions for each country
+function showNotification
+(country) {
+    let description = "";
+    // Set description based on the selected country
+    if (country === "Poland") {
+        description = "Experience the best of Poland with visits to Wroclaw, Krakow, and Gdansk! From the Gothic wonders of Wroclaw to Krakow's historic charm and Gdansk's coastal beauty, each city offers a unique adventure waiting to be discovered. Dive into the heart of Poland's culture and history on this unforgettable journey!";
+    } else if (country === "France") {
+        description = "Indulge in the splendor of France with an itinerary that takes you through the captivating cities of Lyon, Toulouse, and Marseille! From Lyon's gourmet delights to Toulouse's rich history and Marseille's Mediterranean allure, each destination offers a tantalizing glimpse into the diverse tapestry of French culture. Prepare to be enchanted by France's timeless charm and irresistible joie de vivre on this unforgettable voyage!";
+    } else if (country === "Spain") {
+        description = "Embark on an enchanting Spanish escapade as you journey through the vibrant cities of Valencia, Seville, and San Sebastian! From Valencia's modern architecture to Seville's flamenco rhythms and San Sebastian's picturesque beaches, each destination invites you to savor the essence of Spain's rich heritage and vibrant culture. Get ready to be swept away by the passion and beauty of Spain on this unforgettable adventure!";
+    } else if (country === "Italy") {
+        description = "Prepare for an Italian voyage like no other, where the ancient streets of Florence, the rolling hills of Tuscany, and the vibrant energy of Naples await your exploration! Dive into Florence's artistic legacy, unwind amidst Tuscany's picturesque landscapes, and savor Naples' culinary delights by the sea. With each city offering its own unique charm, Italy promises an adventure filled with unforgettable moments and timeless beauty!";
+    } else if (country === "Germany") {        description = "Journey through Germany's hidden gems with stops in Potsdam, Hannover, and Stuttgart! Wander through Potsdam's regal gardens, immerse yourself in Hannover's vibrant city life, and explore Stuttgart's blend of tradition and innovation. Experience the essence of Germany as you traverse these captivating cities, each offering its own story to tell and memories to cherish!!";
+    } else if (country === "Norway") {
+        description = "Set sail on a Norwegian adventure, charting a course through the captivating cities of Oslo, Bergen, and Arendal! Discover Oslo's blend of modernity and tradition, marvel at Bergen's scenic beauty nestled among fjords, and immerse yourself in the coastal charm of Arendal. Each destination offers a unique glimpse into Norway's rich history, stunning landscapes, and vibrant culture. Prepare to be captivated by the breathtaking wonders of Norway on this unforgettable journey!";
+    } else if (country === "Turkey") {
+        description = "Discover the treasures of Turkey as you journey through the captivating cities of Antalya, Cappadocia, and Ankara! Explore the sun-soaked beaches of Antalya, marvel at the otherworldly landscapes of Cappadocia, and delve into the rich history of Ankara, Turkey's capital. Each destination offers a unique blend of natural beauty, cultural heritage, and vibrant energy, promising an unforgettable journey through the heart of Turkey!!";
+    } else if (country === "Greece") {
+        description = "Experience the magic of Greece as you traverse the captivating cities of Rhodes, Santorini, and Thessaloniki! Wander through the ancient streets of Rhodes' medieval Old Town, soak in the stunning sunsets of Santorini's iconic caldera, and explore the vibrant atmosphere of Thessaloniki's lively waterfront. From historical wonders to natural beauty, Greece invites you on a journey filled with endless discoveries and unforgettable moments!";
+    }
+// Create notification box with country and description
+    const notification = document.createElement("div");
+    notification.classList.add("notification");
+    notification.innerHTML = `<strong>You won a ticket to ${country}!</strong><br>${description}`;
+ document.body.appendChild(notification);
+
+    // Remove notification after a certain time
+    setTimeout(() => {
+        notification.remove();
+    }, 20000);
+}
+// Set data
+country": "Poland", "value": 1, "finalResult": "Poland"},
+    {"country": "France"const data = [
+    {", "value": 2, "finalResult": "France"},
+    {"country": "Spain", "value": 3, "finalResult": "Spain"}, 
+    {"country": "Italy", "value": 4, "finalResult": "Italy"}, 
+    {"country": "Germany", "value": 5, "finalResult": "Germany"}, 
+    {"country": "Norway", "value": 6, "finalResult": "Norway"},
+    {"country": "Turkey", "value": 7, "finalResult": "Turkey"}, 
+    {"country": "Greece", "value": 8, "finalResult": "Greece"},
+];
+ 
+// Function to prompt the user to select their favorite country
+function selectCountry() {
+    const userInput = prompt("Please enter your favorite country:");
+    if (userInput !== null) {
+        const selectedCountry = data.find(country => country.country.toLowerCase() === userInput.trim().toLowerCase());
+        if (selectedCountry) {
+            alert("You confirmed " + selectedCountry.country + " as your favorite country!");
+        } else {
+            alert("Your favorite country is: " + userInput);
+        }
+    }
+}
+
+//prompt screen 
+selectCountry();
