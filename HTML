@@ -1,0 +1,40 @@
+<div id="chart"></div>
+<div class="finalResult"><h1></h1></div>
+
+<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<div class="output OP1"></div>
+<script>
+    // Set data create a link to the js element link to a div.
+    const data = [
+      {"country": "Poland", "value": 1, "finalResult": "Poland"},
+      {"country": "France", "value": 2, "finalResult": "France"},
+      {"country": "Spain", "value": 3, "finalResult": "Spain"}, 
+      {"country": "Italy", "value": 4, "finalResult": "Italy"}, 
+      {"country": "Germany", "value": 5, "finalResult": "Germany"}, 
+      {"country": "Norway", "value": 6, "finalResult": "Norway"},
+      {"country": "Turkey", "value": 7, "finalResult": "Turkey"}, 
+      {"country": "Greece", "value": 8, "finalResult": "Greece"},
+    ];
+     
+    // Function to prompt the user to select their favorite country
+    function selectCountry() {
+      const countryNames = data.map(countryData => countryData.country);
+      const countryIndex = prompt("Please select your favorite country by entering its number:\n\n1. " + countryNames[0] + "\n2. " + countryNames[1]);
+      
+      if (countryIndex !== null) {
+        const selectedCountry = data[parseInt(countryIndex) - 1];
+        const userInput = prompt("Your favorite country is: " + selectedCountry.country + ". Please confirm or type your favorite country.");
+        
+        if (userInput !== null) {
+          if (userInput.trim().toLowerCase() === selectedCountry.country.toLowerCase()) {
+            alert("You confirmed " + selectedCountry.country + " as your favorite country!");
+          } else {
+            alert("Your favorite country is: " + userInput);
+          }
+        }
+      }
+    }
+
+    // selectCountry function as a prompt
+    window.onload = selectCountry;
+  </script>
